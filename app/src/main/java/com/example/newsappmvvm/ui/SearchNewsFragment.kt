@@ -1,60 +1,103 @@
 package com.example.newsappmvvm.ui
 
 import android.os.Bundle
+import android.text.Editable
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.viewModels
+import androidx.core.widget.addTextChangedListener
+import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.newsappmvvm.R
+import com.example.newsappmvvm.data.Resource
+import com.example.newsappmvvm.databinding.FragmentSearchNewsBinding
+import com.example.newsappmvvm.ui.adapters.NewsAdapter
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
 
-/**
- * A simple [Fragment] subclass.
- * Use the [SearchNewsFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
+@AndroidEntryPoint
 class SearchNewsFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
+    private val viewModel by viewModels<NewsViewModel>()
+
+    private lateinit var binding: FragmentSearchNewsBinding
+
+    private lateinit var newsAdapter: NewsAdapter
+
+    private val TAG = "SearchNewsFragment"
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_search_news, container, false)
+        binding = FragmentSearchNewsBinding.inflate(layoutInflater)
+        return binding.root
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment SearchNewsFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            SearchNewsFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        setupRecyclerView()
+        newsAdapter.setOnItemClickListener {
+            val bundle = Bundle().apply {
+                putSerializable("article",it)
+            }
+            findNavController().navigate(R.id.action_searchNewsFragment_to_articleFragment,
+                bundle)
+        }
+        var job:Job?=null
+        binding.searchEdit.addTextChangedListener {editable->
+            job?.cancel()
+            job = MainScope().launch {
+                delay(500L)
+                editable?.let {
+                    if(editable.toString().isNotEmpty()){
+                        viewModel.getSearchNews(editable.toString())
+                    }
                 }
             }
+        }
+        viewModel.searchNews.observe(viewLifecycleOwner) {
+            when (it) {
+                is Resource.Success -> {
+                    hideProgressBar()
+                    it.data?.let { response ->
+                        newsAdapter.differ.submitList(response.articles)
+                    }
+                }
+                is Resource.Error -> {
+                    hideProgressBar()
+                    it.message?.let {
+                        Log.e(TAG, it)
+                    }
+                }
+                is Resource.Loading -> {
+                    showProgressBar()
+                }
+            }
+        }
     }
+    private fun hideProgressBar(){
+        binding.paginationProgressBar.visibility = View.INVISIBLE
+    }
+    private fun showProgressBar(){
+        binding.paginationProgressBar.visibility = View.VISIBLE
+    }
+
+    private fun setupRecyclerView() {
+        newsAdapter = NewsAdapter()
+        binding.rvSearchNews.apply {
+            adapter = newsAdapter
+            layoutManager = LinearLayoutManager(activity)
+        }
+    }
+
 }
