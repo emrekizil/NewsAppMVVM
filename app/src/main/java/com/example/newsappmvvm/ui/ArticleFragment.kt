@@ -12,6 +12,7 @@ import androidx.navigation.NavArgs
 import androidx.navigation.fragment.navArgs
 import com.example.newsappmvvm.R
 import com.example.newsappmvvm.databinding.FragmentArticleBinding
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 
 
@@ -36,7 +37,14 @@ class ArticleFragment : Fragment() {
         val article = args.article
         binding.webView.apply {
             webViewClient = WebViewClient()
-            loadUrl(article.url)
+            if(article.url!=null){
+                loadUrl(article.url)
+            }
+        }
+
+        binding.actionButton.setOnClickListener {
+            viewModel.saveArticle(article)
+            Snackbar.make(view,"Article saved successfully",Snackbar.LENGTH_SHORT).show()
         }
     }
 

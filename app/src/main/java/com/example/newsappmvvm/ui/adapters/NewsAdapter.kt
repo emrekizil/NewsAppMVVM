@@ -41,7 +41,7 @@ class NewsAdapter : RecyclerView.Adapter<NewsAdapter.ArticleViewHolder>()   {
 
     override fun onBindViewHolder(holder: NewsAdapter.ArticleViewHolder, position: Int) {
         val article = differ.currentList[position]
-        binding.tvSource.text = article.source.name
+        binding.tvSource.text = article.source?.name
         binding.tvTitle.text = article.title
         binding.tvDescription.text = article.content
         binding.tvPublishedAt.text = article.publishedAt
