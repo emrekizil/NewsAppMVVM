@@ -3,6 +3,7 @@ package com.example.newsappmvvm.data.database
 import androidx.lifecycle.LiveData
 import androidx.room.*
 import com.example.newsappmvvm.data.dto.Article
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ArticleDao {
@@ -14,6 +15,6 @@ interface ArticleDao {
     suspend fun delete(article: Article)
 
     @Query("SELECT * from articles")
-    fun getAllArticles():LiveData<List<Article>>
+    fun getAllArticles(): Flow<List<Article>>
 
 }

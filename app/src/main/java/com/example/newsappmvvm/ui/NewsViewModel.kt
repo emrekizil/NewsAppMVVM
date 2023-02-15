@@ -4,12 +4,14 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bumptech.glide.Glide.init
 import com.example.newsappmvvm.data.Resource
 import com.example.newsappmvvm.data.dto.Article
 import com.example.newsappmvvm.data.dto.NewsResponse
 import com.example.newsappmvvm.data.repository.NewsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import retrofit2.Response
 
@@ -19,7 +21,6 @@ import javax.inject.Inject
 @HiltViewModel
 class NewsViewModel @Inject constructor(
     private val newsRepository: NewsRepository,
-
 ) :ViewModel() {
 
     private var _breakingNews : MutableLiveData<Resource<NewsResponse>> = MutableLiveData()
@@ -32,11 +33,15 @@ class NewsViewModel @Inject constructor(
     var searchNewsResponse: NewsResponse?=null
     var searchNewsPage =1
 
+    private var _savedNews : MutableLiveData<List<Article>> = MutableLiveData()
+    val savedNews:LiveData<List<Article>> get() = _savedNews
+
     init {
         getBreakingNews("us")
+        getSavedNews()
     }
 
-    fun getBreakingNews(countryCode:String){
+   /* fun getBreakingNews(countryCode:String){
          viewModelScope.launch {
              _breakingNews.postValue(Resource.Loading())
              val response = newsRepository.getBreakingNews(countryCode,breakingNewsPage)
@@ -50,40 +55,75 @@ class NewsViewModel @Inject constructor(
             val response = newsRepository.getNewsWithSearchQuery(searchQuery,searchNewsPage)
             _searchNews.postValue(handleSearchNewsResponse(response))
         }
+    }*/
+
+    fun getBreakingNews(countryCode:String){
+        viewModelScope.launch {
+            newsRepository.getBreakingNews(countryCode,breakingNewsPage).collectLatest {
+                when(it){
+                    is Resource.Success -> {
+                        _breakingNews.postValue(handleBreakingNewsResponse(it))
+                    }
+                    is Resource.Error ->{
+                        _breakingNews.postValue(Resource.Error(it.message.toString()))
+                    }
+                    is Resource.Loading ->{
+                        _breakingNews.postValue(Resource.Loading())
+                    }
+                }
+            }
+        }
     }
 
-    private fun handleBreakingNewsResponse( response: Response<NewsResponse>) : Resource<NewsResponse>{
-        if (response.isSuccessful){
-            response.body()?.let { resultResponse ->
+    fun getSearchNews(searchQuery:String){
+        viewModelScope.launch {
+            newsRepository.getNewsWithSearchQuery(searchQuery,searchNewsPage).collectLatest {
+                when(it){
+                    is Resource.Success ->{
+                        _searchNews.postValue(handleSearchNewsResponse(it))
+                    }
+                    is Resource.Error ->{
+                        _searchNews.postValue(Resource.Error(it.message.toString()))
+                    }
+                    is Resource.Loading ->{
+                        _searchNews.postValue(Resource.Loading())
+                    }
+                }
+            }
+        }
+    }
+
+    private fun handleBreakingNewsResponse( response: Resource<NewsResponse>) : Resource<NewsResponse>{
+            response.let { resultResponse ->
                 breakingNewsPage++
-                if(breakingNewsResponse ==null){
-                    breakingNewsResponse = resultResponse
+                if(breakingNewsResponse == null){
+                    breakingNewsResponse = resultResponse.data
                 }else{
                     val oldArticles = breakingNewsResponse?.articles
-                    val newArticles = resultResponse.articles
-                    oldArticles?.addAll(newArticles)
+                    val newArticles = resultResponse.data?.articles
+                    if (newArticles != null) {
+                        oldArticles?.addAll(newArticles)
+                    }
                 }
-                return  Resource.Success(breakingNewsResponse ?: resultResponse)
+                return  Resource.Success(breakingNewsResponse ?: resultResponse.data)
             }
-        }
-        return Resource.Error(response.message())
     }
-    private fun handleSearchNewsResponse( response: Response<NewsResponse>) : Resource<NewsResponse>{
-        if (response.isSuccessful){
-            response.body()?.let { resultResponse ->
+    private fun handleSearchNewsResponse( response: Resource<NewsResponse>) : Resource<NewsResponse>{
+            println("letsgo")
+            response.let { resultResponse ->
                 searchNewsPage++
                 if(searchNewsResponse == null){
-                    searchNewsResponse = resultResponse
+                    searchNewsResponse = resultResponse.data
                 }else{
                     val oldArticles = searchNewsResponse?.articles
-                    val newArticles = resultResponse.articles
-                    oldArticles?.addAll(newArticles)
+                    val newArticles = resultResponse.data?.articles
+                    if (newArticles != null) {
+                        oldArticles?.addAll(newArticles)
+                    }
 
                 }
-                return Resource.Success(searchNewsResponse ?: resultResponse)
+                return Resource.Success(searchNewsResponse ?: resultResponse.data)
             }
-        }
-        return Resource.Error(response.message())
     }
 
     fun saveArticle(article: Article) {
@@ -98,7 +138,13 @@ class NewsViewModel @Inject constructor(
         }
     }
 
-    fun getSavedNews() = newsRepository.getSavedNews()
+    fun getSavedNews() {
+        viewModelScope.launch{
+            newsRepository.getSavedNews().collectLatest {
+                _savedNews.postValue(it)
+            }
+        }
+    }
 
 
 }

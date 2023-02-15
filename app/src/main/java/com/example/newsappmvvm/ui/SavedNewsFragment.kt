@@ -5,8 +5,9 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.activity.viewModels
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.coroutineScope
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -16,6 +17,10 @@ import com.example.newsappmvvm.databinding.FragmentSavedNewsBinding
 import com.example.newsappmvvm.ui.adapters.NewsAdapter
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+
 
 @AndroidEntryPoint
 class SavedNewsFragment : Fragment() {
@@ -72,7 +77,15 @@ class SavedNewsFragment : Fragment() {
         ItemTouchHelper(itemTouchHelperCallback).apply {
             attachToRecyclerView(binding.rvSavedNews)
         }
-        viewModel.getSavedNews().observe(viewLifecycleOwner){articles ->
+        /*lifecycleScope.launch {
+            viewModel.getSavedNews().collectLatest {
+                newsAdapter.differ.submitList(it)
+            }
+        }*/
+        /*viewModel.getSavedNews().observe(viewLifecycleOwner){articles ->
+            newsAdapter.differ.submitList(articles)
+        }*/
+        viewModel.savedNews.observe(viewLifecycleOwner){articles->
             newsAdapter.differ.submitList(articles)
         }
     }
