@@ -11,6 +11,7 @@ import com.bumptech.glide.Glide
 import com.example.newsappmvvm.R
 import com.example.newsappmvvm.data.dto.Article
 import com.example.newsappmvvm.databinding.ItemArticleBinding
+import com.example.newsappmvvm.utility.loadImage
 
 class NewsAdapter : RecyclerView.Adapter<NewsAdapter.ArticleViewHolder>()   {
     private lateinit var binding : ItemArticleBinding
@@ -29,6 +30,8 @@ class NewsAdapter : RecyclerView.Adapter<NewsAdapter.ArticleViewHolder>()   {
 
     val differ = AsyncListDiffer(this,differCallBack)
 
+
+
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
@@ -45,11 +48,10 @@ class NewsAdapter : RecyclerView.Adapter<NewsAdapter.ArticleViewHolder>()   {
         binding.tvTitle.text = article.title
         binding.tvDescription.text = article.content
         binding.tvPublishedAt.text = article.publishedAt
-        println(article.title)
+        binding.articleImage.loadImage(
+            article.urlToImage
+        )
         holder.itemView.apply {
-            Glide.with(this).load(
-                article.urlToImage
-            ).into(binding.articleImage)
             setOnClickListener{
                 onItemClickListener?.let {
                     it(article)
@@ -68,5 +70,6 @@ class NewsAdapter : RecyclerView.Adapter<NewsAdapter.ArticleViewHolder>()   {
     fun setOnItemClickListener(listener:(Article)->Unit){
         onItemClickListener = listener
     }
+
 
 }

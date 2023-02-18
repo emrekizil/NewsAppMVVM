@@ -1,101 +1,81 @@
-package com.example.newsappmvvm.ui
+package com.example.newsappmvvm.ui.home
 
 import android.os.Bundle
-import android.text.Editable
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AbsListView
-import androidx.activity.viewModels
-import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.newsappmvvm.R
 import com.example.newsappmvvm.data.Resource
-import com.example.newsappmvvm.databinding.FragmentSearchNewsBinding
+import com.example.newsappmvvm.data.dto.Article
+import com.example.newsappmvvm.databinding.FragmentBreakingNewsBinding
 import com.example.newsappmvvm.ui.adapters.NewsAdapter
+import com.example.newsappmvvm.ui.base.NewsRecyclerViewAdapter
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-
 
 @AndroidEntryPoint
-class SearchNewsFragment : Fragment() {
-    private val TAG = "SearchNewsFragment"
+class BreakingNewsFragment : Fragment() {
+    val TAG = "BreakingNewsFragment"
 
-    private val viewModel by viewModels<NewsViewModel>()
+    private val viewModel by viewModels<BreakingNewsViewModel>()
 
-    private lateinit var binding: FragmentSearchNewsBinding
+    private lateinit var binding : FragmentBreakingNewsBinding
 
-    private lateinit var newsAdapter: NewsAdapter
+    private val adapter = NewsRecyclerViewAdapter {article ->
+        adapterOnClick(article)
+    }
 
     var isLoading = false
     var isLastPage = false
     var isScrolling = false
-
-
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        binding = FragmentSearchNewsBinding.inflate(layoutInflater)
+        binding = FragmentBreakingNewsBinding.inflate(layoutInflater).apply{
+            rvBreakingNews.adapter = adapter
+            rvBreakingNews.layoutManager = LinearLayoutManager(activity)
+            rvBreakingNews.addOnScrollListener(this@BreakingNewsFragment.scrollListener)
+
+        }
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupRecyclerView()
-        newsAdapter.setOnItemClickListener {
-            val bundle = Bundle().apply {
-                putSerializable("article",it)
-            }
-            findNavController().navigate(R.id.action_searchNewsFragment_to_articleFragment,
-                bundle)
-        }
-        var job:Job?=null
-        binding.searchEdit.addTextChangedListener {editable->
-            job?.cancel()
-            job = MainScope().launch {
-                delay(500L)
-                editable?.let {
-                    if(editable.toString().isNotEmpty()){
-                        viewModel.getSearchNews(editable.toString())
-                    }
-                }
-            }
-        }
-        viewModel.searchNews.observe(viewLifecycleOwner) {
-            when (it) {
+
+        viewModel.breakingNews.observe(viewLifecycleOwner){response ->
+            when(response){
                 is Resource.Success -> {
                     hideProgressBar()
-                    it.data?.let { response ->
-                        newsAdapter.differ.submitList(response.articles.toList())
-                        val totalPages = response.totalResults/20 +2
-                        isLastPage = viewModel.searchNewsPage == totalPages
+                    response.data?.let {
+                        handleUiData(it.articles.toList())
+                        val totalPages = it.totalResults / 20 + 2
+                        isLastPage =  viewModel.breakingNewsPage == totalPages
                         if(isLastPage){
-                            binding.rvSearchNews.setPadding(0,0,0,0)
+                            binding.rvBreakingNews.setPadding(0,0,0,0)
                         }
-
                     }
                 }
-                is Resource.Error -> {
+                is Resource.Error ->{
                     hideProgressBar()
-                    it.message?.let {
+                    response.message?.let {
                         Log.e(TAG, it)
                     }
                 }
-                is Resource.Loading -> {
+                is Resource.Loading ->{
                     showProgressBar()
                 }
             }
+
         }
     }
     private fun hideProgressBar(){
@@ -116,14 +96,14 @@ class SearchNewsFragment : Fragment() {
             val visibleItemCount = layoutManager.childCount
             val totalItemCount = layoutManager.itemCount
 
-            val isNotLoadingAndNotLastPage = !isLoading  && !isLastPage
+            val isNotLoadingAndNotLastPage = !isLoading && !isLastPage
             val isAtLastItem = firstVisibleItemPosition + visibleItemCount >= totalItemCount
             val isNotAtBeginning = firstVisibleItemPosition >= 0
-            val isTotalMoreThanVisible = totalItemCount >=20
+            val isTotalMoreThanVisible = totalItemCount >= 20 //Total Response Item
             val shouldPaginate = isNotLoadingAndNotLastPage && isAtLastItem && isNotAtBeginning &&
                     isTotalMoreThanVisible && isScrolling
             if(shouldPaginate){
-                viewModel.getSearchNews(binding.searchEdit.text.toString())
+                viewModel.getBreakingNews("us")
                 isScrolling = false
             }
         }
@@ -134,15 +114,14 @@ class SearchNewsFragment : Fragment() {
                 isScrolling = true
             }
         }
-    }
 
-    private fun setupRecyclerView() {
-        newsAdapter = NewsAdapter()
-        binding.rvSearchNews.apply {
-            adapter = newsAdapter
-            layoutManager = LinearLayoutManager(activity)
-            addOnScrollListener(this@SearchNewsFragment.scrollListener)
-        }
+    }
+    private fun adapterOnClick(article: Article){
+        val action = SearchNewsFragmentDirections.actionSearchNewsFragmentToArticleFragment(article)
+        findNavController().navigate(action)
+    }
+    private fun handleUiData(data:List<Article>){
+        adapter.updateItems(data)
     }
 
 }

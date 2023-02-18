@@ -1,8 +1,10 @@
 package com.example.newsappmvvm.data.dto
 
 
+import android.os.Parcelable
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import kotlinx.parcelize.Parcelize
 import java.io.Serializable
 
 @Entity(
@@ -19,8 +21,8 @@ data class Article(
     val title: String?,
     val url: String?,
     val urlToImage: String?
-) : Serializable
-{
+) :Serializable{
+
     override fun hashCode(): Int {
         var result = id.hashCode()
         if (url.isNullOrEmpty()) {
@@ -29,3 +31,4 @@ data class Article(
         return result
     }
 }
+

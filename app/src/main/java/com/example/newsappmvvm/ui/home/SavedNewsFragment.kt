@@ -1,4 +1,4 @@
-package com.example.newsappmvvm.ui
+package com.example.newsappmvvm.ui.home
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -6,48 +6,42 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.coroutineScope
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.newsappmvvm.R
+import com.example.newsappmvvm.data.dto.Article
 import com.example.newsappmvvm.databinding.FragmentSavedNewsBinding
 import com.example.newsappmvvm.ui.adapters.NewsAdapter
+import com.example.newsappmvvm.ui.base.NewsRecyclerViewAdapter
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 
 
 @AndroidEntryPoint
 class SavedNewsFragment : Fragment() {
-    private val viewModel by viewModels<NewsViewModel>()
+    private val viewModel by viewModels<SavedNewsViewModel>()
 
     private lateinit var binding: FragmentSavedNewsBinding
 
-    private lateinit var newsAdapter: NewsAdapter
+    private val adapter = NewsRecyclerViewAdapter {article ->
+        adapterOnClick(article)
+    }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        binding = FragmentSavedNewsBinding.inflate(layoutInflater)
+        binding = FragmentSavedNewsBinding.inflate(layoutInflater).apply {
+            rvSavedNews.adapter = adapter
+            rvSavedNews.layoutManager = LinearLayoutManager(activity)
+        }
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupRecyclerView()
-        newsAdapter.setOnItemClickListener {
-            val bundle = Bundle().apply {
-                putSerializable("article",it)
-            }
-            findNavController().navigate(R.id.action_savedNewsFragment_to_articleFragment,
-                bundle)
-        }
         val itemTouchHelperCallback = object : ItemTouchHelper.SimpleCallback(
             ItemTouchHelper.UP or ItemTouchHelper.DOWN,
             ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT
@@ -63,7 +57,7 @@ class SavedNewsFragment : Fragment() {
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 val position = viewHolder.adapterPosition
-                val article = newsAdapter.differ.currentList[position]
+                val article = adapter.getItem(position)
                 viewModel.deleteArticle(article)
                 Snackbar.make(view,"Successfully deleted article",Snackbar.LENGTH_LONG).apply {
                     setAction("Undo"){
@@ -72,29 +66,18 @@ class SavedNewsFragment : Fragment() {
                     show()
                 }
             }
-
         }
         ItemTouchHelper(itemTouchHelperCallback).apply {
             attachToRecyclerView(binding.rvSavedNews)
         }
-        /*lifecycleScope.launch {
-            viewModel.getSavedNews().collectLatest {
-                newsAdapter.differ.submitList(it)
-            }
-        }*/
-        /*viewModel.getSavedNews().observe(viewLifecycleOwner){articles ->
-            newsAdapter.differ.submitList(articles)
-        }*/
         viewModel.savedNews.observe(viewLifecycleOwner){articles->
-            newsAdapter.differ.submitList(articles)
+            adapter.updateItems(articles)
         }
     }
-    private fun setupRecyclerView() {
-        newsAdapter = NewsAdapter()
-        binding.rvSavedNews.apply {
-            adapter = newsAdapter
-            layoutManager = LinearLayoutManager(activity)
-        }
+
+    private fun adapterOnClick(article: Article){
+        val action = SavedNewsFragmentDirections.actionSavedNewsFragmentToArticleFragment(article)
+        findNavController().navigate(action)
     }
 
 }
