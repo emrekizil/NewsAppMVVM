@@ -6,6 +6,7 @@ import androidx.activity.viewModels
 import androidx.core.widget.NestedScrollView
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.example.newsappmvvm.R
 import com.example.newsappmvvm.databinding.ActivityMainBinding
@@ -21,9 +22,11 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        setSupportActionBar(binding.myToolbar)
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHostFragment.navController
         binding.bottomNavigationView.setupWithNavController(navController)
     }
+
 }

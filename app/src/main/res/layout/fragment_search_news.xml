@@ -8,11 +8,14 @@
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/searchLayout"
+        style="?attr/textInputOutlinedStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginTop="16dp">
+        app:endIconMode="clear_text"
+        android:layout_marginTop="8dp"
+        android:layout_marginHorizontal="4dp">
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/searchEdit"
             android:layout_width="match_parent"

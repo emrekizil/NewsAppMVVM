@@ -7,7 +7,7 @@ import javax.inject.Inject
 
 class RemoteDataSourceImpl @Inject constructor(
     private val api: NewsApi
-) : RemoteDataSource{
+) : RemoteDataSource {
     override suspend fun getBreakingNews(
         countryCode: String,
         pageNumber: Int

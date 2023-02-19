@@ -11,12 +11,9 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.newsappmvvm.R
 import com.example.newsappmvvm.data.Resource
 import com.example.newsappmvvm.data.dto.Article
 import com.example.newsappmvvm.databinding.FragmentBreakingNewsBinding
-import com.example.newsappmvvm.ui.adapters.NewsAdapter
-import com.example.newsappmvvm.ui.base.NewsRecyclerViewAdapter
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -117,7 +114,7 @@ class BreakingNewsFragment : Fragment() {
 
     }
     private fun adapterOnClick(article: Article){
-        val action = SearchNewsFragmentDirections.actionSearchNewsFragmentToArticleFragment(article)
+        val action = BreakingNewsFragmentDirections.actionBreakingNewsFragmentToArticleFragment(article)
         findNavController().navigate(action)
     }
     private fun handleUiData(data:List<Article>){

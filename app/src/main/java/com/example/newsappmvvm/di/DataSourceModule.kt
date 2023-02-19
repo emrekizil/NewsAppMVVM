@@ -16,9 +16,9 @@ abstract class DataSourceModule {
 
     @Binds
     @ViewModelScoped
-    abstract fun bindRemoteDataSource(remoteDataSourceImpl: RemoteDataSourceImpl):RemoteDataSource
+    abstract fun bindRemoteDataSource(remoteDataSourceImpl: RemoteDataSourceImpl): RemoteDataSource
 
     @Binds
     @ViewModelScoped
-    abstract fun bindLocalDataSource(localDataSourceImpl: LocalDataSourceImpl):LocalDataSource
+    abstract fun bindLocalDataSource(localDataSourceImpl: LocalDataSourceImpl): LocalDataSource
 }

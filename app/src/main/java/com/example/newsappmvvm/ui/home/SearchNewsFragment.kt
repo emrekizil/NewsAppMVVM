@@ -7,27 +7,18 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.AbsListView
-import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.newsappmvvm.R
 import com.example.newsappmvvm.data.Resource
 import com.example.newsappmvvm.data.dto.Article
 import com.example.newsappmvvm.databinding.FragmentSearchNewsBinding
-import com.example.newsappmvvm.ui.adapters.NewsAdapter
-import com.example.newsappmvvm.ui.base.NewsRecyclerViewAdapter
 import com.example.newsappmvvm.utility.observeTextChanges
 import com.example.newsappmvvm.utility.okWith
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
-import okhttp3.internal.notify
 
 
 @AndroidEntryPoint

@@ -15,7 +15,7 @@ import retrofit2.Response
 import javax.inject.Inject
 
 class NewsRepositoryImpl @Inject constructor(
-    private val remoteDataSource:RemoteDataSource,
+    private val remoteDataSource: RemoteDataSource,
     private val localDataSource: LocalDataSource
 ) : NewsRepository {
     override suspend fun getBreakingNews(

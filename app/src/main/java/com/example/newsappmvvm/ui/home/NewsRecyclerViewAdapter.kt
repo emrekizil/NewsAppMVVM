@@ -1,10 +1,10 @@
-package com.example.newsappmvvm.ui.base
+package com.example.newsappmvvm.ui.home
 
 import android.view.ViewGroup
 import com.example.newsappmvvm.data.dto.Article
-import com.example.newsappmvvm.ui.adapters.NewsAdapter
+import com.example.newsappmvvm.ui.base.BaseRecyclerViewAdapter
 
-class NewsRecyclerViewAdapter(private val onClick:(Article) -> Unit) : BaseRecyclerViewAdapter<Article,NewsViewHolder>(){
+class NewsRecyclerViewAdapter(private val onClick:(Article) -> Unit) : BaseRecyclerViewAdapter<Article, NewsViewHolder>(){
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NewsViewHolder {
         return NewsViewHolder.createForm(parent)
     }

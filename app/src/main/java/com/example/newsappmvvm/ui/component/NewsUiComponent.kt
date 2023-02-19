@@ -20,7 +20,7 @@ class NewsUiComponent @JvmOverloads constructor(
     }
     fun setNewsData(article: Article){
         binding.tvTitle.text = article.title
-        binding.tvSource.text = article.author
+        binding.tvSource.text = article.source?.name
         binding.tvPublishedAt.text = article.publishedAt
         binding.tvDescription.text = article.description
         binding.articleImage.loadImage(article.urlToImage)
